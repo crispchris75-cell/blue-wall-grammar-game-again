@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blue Wall Grammar Arcade</title>
+<style>
+body{margin:0;font-family:Arial,'Noto Sans KR',sans-serif;background:#071421;color:white;padding:20px}
+.wrap{max-width:900px;margin:auto}.arena{background:linear-gradient(#07182d,#0c2c52,#07182d);border-radius:24px;padding:24px;position:relative;overflow:hidden}
+.arena:before,.arena:after{content:'';position:absolute;top:0;bottom:0;width:16px;background:linear-gradient(#36a8ff,#135b9e,#36a8ff)}
+.arena:before{left:0}.arena:after{right:0}.inner{position:relative;z-index:1}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+h1{margin:4px 0;font-size:28px}.small{font-size:12px;color:#bce2ff;letter-spacing:.16em}.pill{padding:8px 12px;border-radius:999px;background:#ffffff17;border:1px solid #ffffff2e;font-weight:700}
+.hud{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}.hud div{background:#ffffff12;border:1px solid #ffffff2e;padding:10px;border-radius:12px;text-align:center}
+.hud small{display:block;color:#bce2ff}.hud b{font-size:22px}.progress{height:8px;background:#ffffff20;border-radius:999px;overflow:hidden}.progress div{height:100%;background:#77c8ff;width:0}
+.card{background:white;color:#10233c;border-radius:18px;padding:22px;margin-top:14px}.center{text-align:center}.hidden{display:none}
+.btn{border:0;border-radius:13px;padding:13px 18px;font-weight:800;font-size:16px;cursor:pointer}.primary{background:#1677d2;color:white}.secondary{background:#ffffff1f;color:white;border:1px solid #ffffff30}
+.answers{display:grid;gap:10px;margin-top:12px}.answer{width:100%;text-align:left;padding:14px 16px;border-radius:14px;border:1px solid #c8d8e8;background:white;color:#10233c;font-size:16px;font-weight:700;cursor:pointer}
+.good{background:#e7f7ef!important;border-color:#3b9a68!important}.bad{background:#fdecec!important;border-color:#c85b5b!important}
+.feedback{min-height:64px;border-radius:14px;background:#ffffff10;border:1px solid #7fc8ff55;padding:13px;margin-top:12px;line-height:1.5}.nextrow{text-align:right;margin-top:10px}
+.tag{font-size:12px;font-weight:900;color:#1667ac;letter-spacing:.12em}.prompt{font-size:24px;font-weight:900;line-height:1.4;margin-top:8px}.sub{color:#64748b;margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{background:#f1f5f9;border-radius:12px;padding:14px}.note{font-size:14px;color:#64748b;line-height:1.6}
+@media(max-width:600px){body{padding:8px}.arena{padding:18px}.hud{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.prompt{font-size:20px}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="arena"><div class="inner">
+<div class="top"><div><div class="small">BREAKING THE CYCLE · p.93</div><h1>BLUE WALL GRAMMAR ARCADE</h1></div><div id="mode" class="pill">ROUND 1 · HAVE</div></div>
+<div class="hud"><div><small>SCORE</small><b id="score">0</b></div><div><small>STREAK</small><b id="streak">0</b></div><div><small>LIVES</small><b id="lives">❤️❤️❤️</b></div><div><small>QUESTION</small><b id="qnum">1 / 22</b></div></div>
+<div class="progress"><div id="bar"></div></div>
+
+<section id="start" class="card center">
+<div class="tag">MISSION</div><div class="prompt">Can you break through the Blue Wall?</div>
+<p class="note">Round 1: <b>have + O + p.p.</b><br>Round 2: <b>contribute to</b> — 기여하다 vs 일조하다</p>
+<div class="grid2"><div class="box"><b>+100</b><br><span class="note">정답</span></div><div class="box"><b>Streak Bonus</b><br><span class="note">연속 정답</span></div></div>
+<p><button id="startBtn" class="btn primary">START GAME</button></p>
+</section>
+
+<section id="game" class="hidden">
+<div class="card"><div id="tag" class="tag"></div><div id="prompt" class="prompt"></div><div id="sub" class="sub"></div></div>
+<div id="answers" class="answers"></div><div id="feedback" class="feedback">정답을 선택하세요.</div>
+<div class="nextrow"><button id="nextBtn" class="btn secondary" disabled>NEXT →</button></div>
+</section>
+
+<section id="end" class="card center hidden">
+<div class="tag">MISSION COMPLETE</div><div id="finalTitle" class="prompt">Blue Wall Cleared!</div><div id="finalScore" style="font-size:22px;font-weight:900;margin:8px"></div><p id="finalMsg" class="note"></p>
+<div class="grid2"><div class="box">HAVE ROUND<div id="haveResult" style="font-size:22px;font-weight:900"></div></div><div class="box">CONTRIBUTE ROUND<div id="contribResult" style="font-size:22px;font-weight:900"></div></div></div>
+<p><button id="restartBtn" class="btn primary">PLAY AGAIN</button></p>
+</section>
+
+<script>
+const qs=[
+{r:1,t:'MEANING',p:'She can have it repaired.',s:'가장 자연스러운 뜻은?',a:['그녀는 그것을 직접 수리할 수 있다.','그녀는 그것을 수리 맡길 수 있다.','그녀는 그것이 수리되었다고 생각한다.'],c:1,e:'have + O + p.p.는 보통 다른 사람에게 O가 ~되도록 맡기는 의미입니다.'},
+{r:1,t:'STRUCTURE',p:'have + it + repaired',s:'it과 repaired의 관계는?',a:['it repairs something','it is repaired','it repaired someone'],c:1,e:'목적어 it은 repair를 하는 주체가 아니라 수리를 받는 대상입니다.'},
+{r:1,t:'COMPARE',p:'She can repair it. VS. She can have it repaired.',s:'차이를 가장 잘 설명한 것은?',a:['두 문장은 뜻이 같다.','첫 문장은 직접 수리, 둘째는 수리를 맡김.','첫 문장은 미래, 둘째는 과거.'],c:1,e:'repair it = 직접 수리 / have it repaired = 수리 맡기기.'},
+{r:1,t:'FORM',p:'I had my phone ____ yesterday.',s:'“휴대폰을 수리 맡겼다”',a:['repair','repairing','repaired'],c:2,e:'phone은 수리를 받는 대상이므로 p.p. repaired가 옵니다.'},
+{r:1,t:'REAL LIFE',p:'I had my hair cut.',s:'누가 머리를 잘랐나요?',a:['보통 내가 직접','보통 다른 사람이 나를 위해','아무도 자르지 않았다'],c:1,e:'have my hair cut은 다른 사람이 머리를 잘라 주는 상황입니다.'},
+{r:1,t:'CONCEPT',p:'have + O + p.p.',s:'핵심 개념은?',a:['O가 ~하는 중이다','O가 ~된 상태가 되도록 하다','O를 소유하고 있다만 뜻한다'],c:1,e:'“O가 특정 상태가 되도록 하다”의 감각입니다.'},
+
+{r:1,t:'NEW 1',p:'We had the classroom cleaned after the festival.',s:'가장 자연스러운 뜻은?',a:['우리가 직접 교실을 청소했다.','교실을 청소하도록 맡겼다.','교실 청소를 취소했다.'],c:1,e:'the classroom is cleaned의 수동 관계입니다.'},
+{r:1,t:'NEW 2',p:'My father had his car checked before the trip.',s:'checked의 역할은?',a:['car가 점검한다','car가 점검을 받는다','father가 직접 점검했다'],c:1,e:'his car is checked의 관계이므로 p.p. checked입니다.'},
+{r:1,t:'NEW 3',p:'I need to have this document printed.',s:'문장의 의미는?',a:['내가 직접 문서를 인쇄해야 한다.','이 문서를 인쇄 맡겨야 한다.','문서를 읽어야 한다.'],c:1,e:'this document가 printed되는 상태가 되도록 한다는 뜻입니다.'},
+{r:1,t:'NEW 4',p:'She had her picture taken at the studio.',s:'누가 사진을 찍었나요?',a:['그녀 자신','보통 사진관의 다른 사람','아무도 찍지 않았다'],c:1,e:'have one’s picture taken = 사진을 찍히다/찍다.'},
+{r:1,t:'NEW 5',p:'They are having the windows replaced this week.',s:'가장 자연스러운 해석은?',a:['그들이 직접 창문을 교체 중이다.','이번 주에 창문 교체를 맡기고 있다.','창문을 팔고 있다.'],c:1,e:'the windows are replaced의 수동 관계입니다.'},
+
+{r:2,t:'CORE MEANING',p:'contribute to',s:'가장 핵심적인 의미는?',a:['항상 좋은 일에 봉사하다','어떤 결과가 생기는 데 한몫하다','돈을 기부하다만 뜻한다'],c:1,e:'결과를 만들어 내는 데 한몫한다는 중립적인 핵심 의미가 있습니다.'},
+{r:2,t:'POSITIVE',p:'Exercise contributes to good health.',s:'여기서 contribute to는?',a:['기여하다','일조하다(나쁜 의미)','방해하다'],c:0,e:'good health는 긍정적 결과이므로 “기여하다”가 자연스럽습니다.'},
+{r:2,t:'NEGATIVE',p:'Heavy traffic contributes to air pollution.',s:'가장 자연스러운 해석은?',a:['대기오염을 해결한다.','대기오염에 일조한다.','대기오염을 관찰한다.'],c:1,e:'air pollution은 부정적 결과이므로 “일조하다 / 한 원인이 되다”가 자연스럽습니다.'},
+{r:2,t:'TEXTBOOK',p:'She will be contributing to a serious problem: e-waste.',s:'contributing의 의미는?',a:['문제 해결에 기여하다','문제를 피하다','문제가 커지는 데 일조하다'],c:2,e:'a serious problem이라는 부정적 결과 때문에 “문제에 일조하다”입니다.'},
+{r:2,t:'STRATEGY',p:'contribute to + ______',s:'해석을 결정할 때 가장 먼저 볼 것은?',a:['주어의 길이','to 뒤 결과의 긍정/부정','문장의 시제만'],c:1,e:'to 뒤의 결과를 보고 “기여하다”인지 “일조하다”인지 판단하면 됩니다.'},
+{r:2,t:'FINAL BOSS',p:'Buying things we do not need contributes to environmental problems.',s:'가장 정확한 뜻은?',a:['불필요한 소비가 환경문제에 일조한다.','환경문제를 해결한다.','환경과 관계없다.'],c:0,e:'environmental problems가 부정적 결과이므로 “일조한다”입니다.'},
+
+{r:2,t:'NEW 1',p:'Regular reading contributes to vocabulary growth.',s:'여기서 contribute to는?',a:['기여하다','일조하다(부정)','막다'],c:0,e:'vocabulary growth는 긍정적 결과입니다.'},
+{r:2,t:'NEW 2',p:'Lack of sleep can contribute to poor concentration.',s:'가장 자연스러운 뜻은?',a:['수면 부족이 집중력 저하의 한 원인이 될 수 있다.','집중력을 향상시킨다.','집중력을 측정한다.'],c:0,e:'poor concentration은 부정적 결과이므로 “한 원인이 되다”가 자연스럽습니다.'},
+{r:2,t:'NEW 3',p:'Good communication contributes to stronger relationships.',s:'contributes to의 의미는?',a:['관계를 악화시키는 데 일조한다.','더 좋은 관계 형성에 기여한다.','관계를 끝낸다.'],c:1,e:'stronger relationships는 긍정적 결과입니다.'},
+{r:2,t:'NEW 4',p:'Careless driving contributed to the accident.',s:'가장 자연스러운 해석은?',a:['사고 예방에 기여했다.','사고의 한 원인이 되었다.','사고를 관찰했다.'],c:1,e:'the accident는 부정적 결과이므로 “한 원인이 되었다”가 자연스럽습니다.'},
+{r:2,t:'NEW 5',p:'Trees contribute to cleaner air.',s:'여기서 contribute to는?',a:['더 깨끗한 공기에 기여한다.','공기 오염에 일조한다.','공기를 없앤다.'],c:0,e:'cleaner air는 긍정적 결과입니다.'}
+];
+
+let i=0,score=0,streak=0,lives=3,locked=false,hc=0,cc=0;
+const $=s=>document.querySelector(s);
+function hud(){ $('#score').textContent=score;$('#streak').textContent=streak;$('#lives').textContent='❤️'.repeat(lives)+'♡'.repeat(3-lives);$('#qnum').textContent=(i+1)+' / '+qs.length;$('#bar').style.width=((i/qs.length)*100)+'%';$('#mode').textContent=qs[Math.min(i,qs.length-1)].r===1?'ROUND 1 · HAVE':'ROUND 2 · CONTRIBUTE';}
+function render(){locked=false;$('#nextBtn').disabled=true;$('#feedback').textContent='정답을 선택하세요.';const q=qs[i];$('#tag').textContent=q.t;$('#prompt').textContent=q.p;$('#sub').textContent=q.s;const box=$('#answers');box.innerHTML='';q.a.forEach((x,n)=>{const b=document.createElement('button');b.className='answer';b.textContent=x;b.onclick=()=>answer(n,b);box.appendChild(b)});hud();}
+function answer(n,b){if(locked)return;locked=true;const q=qs[i],bs=[...document.querySelectorAll('.answer')];bs.forEach(x=>x.disabled=true);bs[q.c].classList.add('good');if(n===q.c){streak++;const bonus=Math.min(streak-1,5)*20;score+=100+bonus;q.r===1?hc++:cc++;$('#feedback').innerHTML='<b>✅ Correct!</b> +'+(100+bonus)+' points<br>'+q.e;}else{b.classList.add('bad');streak=0;lives=Math.max(0,lives-1);$('#feedback').innerHTML='<b>❌ Not quite.</b><br>'+q.e;}$('#nextBtn').disabled=false;hud();}
+function next(){if(!locked)return;i++;if(i>=qs.length||lives<=0){finish();return}render();}
+function finish(){$('#game').classList.add('hidden');$('#end').classList.remove('hidden');$('#bar').style.width='100%';$('#finalScore').textContent='FINAL SCORE · '+score;$('#haveResult').textContent=hc+' / 11';$('#contribResult').textContent=cc+' / 11';const t=hc+cc;$('#finalTitle').textContent=lives<=0?'Blue Wall Challenge Ended':'Blue Wall Cleared!';$('#finalMsg').textContent=t>=20?'두 개념을 거의 완벽하게 구분했습니다!':t>=16?'핵심은 확실히 잡았습니다. 틀린 문장만 다시 보면 좋습니다.':'have + O + p.p.의 수동 관계와 contribute 뒤의 결과를 다시 확인해 보세요.';}
+function reset(){i=0;score=0;streak=0;lives=3;hc=0;cc=0;$('#start').classList.add('hidden');$('#end').classList.add('hidden');$('#game').classList.remove('hidden');render();}
+$('#startBtn').onclick=reset;$('#restartBtn').onclick=reset;$('#nextBtn').onclick=next;
+</script>
+</div></div></div>
+</body>
+</html>
